@@ -20,18 +20,47 @@ abstract class PageBase {
   String title;
 
   /// Latest page content in HTML, following the [HTML 2.1.0 specification](https://www.mediawiki.org/wiki/Specs/HTML/2.1.0)
-  Future<String> get html => _wiki.request(path: 'page/$title/html');
+  Future<String> get html async {
+    if (_wiki.polyfilled) {
+      try {
+        return (await _wiki.requestJson(params: {
+          'action': 'parse',
+          'page': title,
+          'prop': 'text'
+        }))['parse']['text'];
+      } on Error {
+        throw InvalidResponseException();
+      }
+    } else {
+      return _wiki.request(path: 'page/$title/html');
+    }
+  }
 
   /// Pages with the same topic in different languages.
-  Future<List<Language>> get languages =>
-      _wiki.requestJson(path: 'page/$title/links/language').then(
+  Future<List<Language>> get languages async {
+    if (_wiki.polyfilled) {
+      try {
+        return ((await _wiki.requestJson(
+                    params: {'action': 'parse', 'prop': 'langlinks'}))['parse']
+                ['langlinks'] as List)
+            .map((link) => Language(
+                code: link['lang'],
+                name: link['autonym'],
+                key: (link['title'] as String).replaceAll(' ', '_'),
+                title: link['title']));
+      } on Error {
+        throw InvalidResponseException();
+      }
+    } else {
+      return _wiki.requestJson(path: 'page/$title/links/language').then(
           (value) => (value as List).map((e) => Language.fromJson(e)).toList());
+    }
+  }
 
   /// Information about files used on this page.
-  Future<List<File>> get files async => await _wiki
-      .requestJson(path: 'page/$title/links/media')
-      .then((value) => value['files'] as List)
-      .then((value) => value.map((file) => File.fromJson(file)).toList());
+  Future<List<File>> get files async =>
+      await _wiki.requestJson(path: 'page/$title/links/media').then((value) =>
+          (value['files'] as List).map((file) => File.fromJson(file)).toList());
 
   /// The history of this page
   History get history => History(_wiki, title);
@@ -134,8 +163,24 @@ class PageFuture extends PageBase
 
   PageFuture(Wiki wiki, this.title) : _wiki = wiki;
 
-  Future<Page> fetch() async =>
-      Page.fromJson(_wiki, await _wiki.requestJson(path: 'page/$title'));
+  Future<Page> fetch() async {
+    if (_wiki.polyfilled) {
+      return Page.fromActions(
+          _wiki,
+          await _wiki.requestJson(params: {
+            'action': 'query',
+            'titles': title,
+            'prop': 'revisions|info',
+            'rvprop': 'timestamp|ids|content',
+            'rvslots': 'main',
+            'rvlimit': '1',
+            'meta': 'siteinfo',
+            'siprop': 'rightsinfo'
+          }));
+    } else {
+      return Page.fromJson(_wiki, await _wiki.requestJson(path: 'page/$title'));
+    }
+  }
 
   @override
   @protected
@@ -196,24 +241,51 @@ class Page extends PageBase {
         super();
 
   // I couldn't use `json_serializable` because of `wiki`
-  factory Page.fromJson(Wiki wiki, Map data) {
-    if (data['id'] is int &&
-        data['key'] is String &&
-        data['title'] is String &&
-        data['latest'] is Map &&
-        data['content_model'] is String &&
-        data['license'] is Map &&
-        data['source'] is String) {
+  factory Page.fromJson(Wiki wiki, Map json) {
+    try {
       return Page(wiki,
-          id: data['id'],
-          key: data['key'],
-          title: data['title'],
-          latest: PageRevision.fromJson(data['latest']),
-          contentModel: data['content_model'],
-          license: License.fromJson(data['license']),
-          source: data['source']);
-    } else {
+          id: json['id'],
+          key: json['key'],
+          title: json['title'],
+          latest: PageRevision.fromJson(json['latest']),
+          contentModel: json['content_model'],
+          license: License.fromJson(json['license']),
+          source: json['source']);
+    } on TypeError {
       throw InvalidResponseException();
+    }
+  }
+
+  factory Page.fromActions(Wiki wiki, Map json) {
+    try {
+      return Page(wiki,
+          id: json['query']['pages'][0]['pageid'],
+          key: (json['query']['pages'][0]['title'] as String)
+              .replaceAll(' ', '_'),
+          title: json['query']['pages'][0]['title'],
+          latest: PageRevision(
+              id: json['query']['pages'][0]['lastrevid'],
+              timestamp: json['query']['pages'][0]['revisions'][0]
+                  ['timestamp']),
+          contentModel: json['query']['pages'][0]['contentmodel'],
+          license: License(
+              url: json['query']['rightsinfo']['url'],
+              title: json['query']['rightsinfo']['text']),
+          source: json['query']['pages'][0]['revisions'][0]['slots']['main']
+              ['content']);
+    } on TypeError {
+      throw InvalidResponseException();
+    } on NoSuchMethodError {
+      try {
+        if (json['query']['pages'][0]['missing']) {
+          throw ApiException(
+              'The specified title (${json['query']['pages'][0]['title']}) does not exist');
+        } else {
+          throw InvalidResponseException();
+        }
+      } on NoSuchMethodError {
+        throw InvalidResponseException();
+      }
     }
   }
 }

@@ -98,7 +98,7 @@ class Wiki {
   /// Low-level API command.
   Future<String> request(
       {String method = 'GET',
-      String path,
+      String path = '',
       Map<String, String> params,
       Map<String, String> headers = const {},
       String body = ''}) {
@@ -124,7 +124,7 @@ class Wiki {
   }
 
   Future<dynamic> requestJson(
-          {String path,
+          {String path = '',
           Map<String, String> params,
           Map<String, String> headers = const {},
           String method = 'GET',
