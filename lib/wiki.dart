@@ -25,7 +25,7 @@ class Wiki {
   Uri _uri;
 
   Wiki(Uri uri, [this.token]) : _uri = uri {
-    polyfilled = _uri.pathSegments[_uri.pathSegments.length - 2] == 'api.php';
+    polyfilled = _uri.pathSegments.last == 'api.php';
   }
 
   static Future<bool> _checkUrl(Uri url, [String token]) async {
@@ -50,7 +50,7 @@ class Wiki {
   /// Query parameters will be ignored.
   static Future<Wiki> fromUrl(String url, [String token]) async {
     // Ensure URL acts like directory
-    if (!url.endsWith('/')) url += '/';
+    if (!url.endsWith('/') && !url.endsWith('api.php')) url += '/';
 
     var uri = Uri.parse(url);
 
@@ -64,8 +64,8 @@ class Wiki {
       // Uri is already valid
     } else if (await _checkUrl(uri.resolve('rest.php/v1/'))) {
       uri = uri.resolve('rest.php/v1/');
-    } else if (await _checkUrl(uri.resolve('api.php/'))) {
-      uri = uri.resolve('api.php/');
+    } else if (await _checkUrl(uri.resolve('api.php'))) {
+      uri = uri.resolve('api.php');
     } else {
       throw ArgumentError.value(url, 'url');
     }

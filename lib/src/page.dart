@@ -273,7 +273,7 @@ class Page extends PageBase {
       throw InvalidResponseException();
     } on NoSuchMethodError {
       try {
-        if (json['query']['pages'][0]['missing']) {
+        if (json['query']['pages'][0]['missing'] != null) {
           throw ApiException(
               'The specified title (${json['query']['pages'][0]['title']}) does not exist');
         } else {
