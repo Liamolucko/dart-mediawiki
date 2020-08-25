@@ -8,6 +8,8 @@ import 'src/page.dart';
 import 'src/revision.dart';
 import 'src/wrappers.dart';
 
+export 'src/errors.dart';
+
 class Wiki {
   String get url => _uri.toString();
   set url(String value) {
@@ -47,12 +49,10 @@ class Wiki {
   ///
   /// Query parameters will be ignored.
   static Future<Wiki> fromUrl(String url, [String token]) async {
-    var uri = Uri.parse(url);
+    // Ensure URL acts like directory
+    if (!url.endsWith('/')) url += '/';
 
-    // Make sure URI is a directory
-    if (uri.pathSegments.isNotEmpty && uri.pathSegments.last != '') {
-      uri = uri.resolve('${uri.pathSegments.last}/');
-    }
+    var uri = Uri.parse(url);
 
     // Append `v1` to `rest.php`
     if (uri.pathSegments[uri.pathSegments.length - 2] == 'rest.php' &&
@@ -96,25 +96,27 @@ class Wiki {
   }
 
   /// Low-level API command.
-  Future<String> request(
-      {String method = 'GET',
-      String path = '',
-      Map<String, String> params,
-      Map<String, String> headers = const {},
-      String body = ''}) {
+  Future<String> request({
+    String method = 'GET',
+    String path = '',
+    Map<String, String> params,
+    Map<String, String> headers = const {},
+    String body = '',
+  }) {
     final uri = Uri(
-        scheme: _uri.scheme,
-        host: _uri.host,
-        port: _uri.port,
-        path: _uri.resolve(path).path,
-        queryParameters: polyfilled
-            ? {
-                ...params,
-                'format': 'json',
-                'formatversion': '2',
-                'errorformat': 'plaintext'
-              }
-            : params);
+      scheme: _uri.scheme,
+      host: _uri.host,
+      port: _uri.port,
+      path: _uri.resolve(path).path,
+      queryParameters: polyfilled
+          ? {
+              ...params,
+              'format': 'json',
+              'formatversion': '2',
+              'errorformat': 'plaintext'
+            }
+          : params,
+    );
     return _client
         .send(http.Request(method, uri)
           ..headers.addAll(headers) // package:http, why are you like this?
@@ -123,19 +125,20 @@ class Wiki {
         .then(_handleError);
   }
 
-  Future<dynamic> requestJson(
-          {String path = '',
-          Map<String, String> params,
-          Map<String, String> headers = const {},
-          String method = 'GET',
-          String body = ''}) =>
+  Future<dynamic> requestJson({
+    String path = '',
+    Map<String, String> params,
+    Map<String, String> headers = const {},
+    String method = 'GET',
+    String body = '',
+  }) =>
       request(
-              path: path,
-              params: params,
-              headers: headers,
-              method: method,
-              body: body)
-          .then((value) => json.decode(value));
+        path: path,
+        params: params,
+        headers: headers,
+        method: method,
+        body: body,
+      ).then((value) => json.decode(value));
 
   Future<dynamic> getJson(dynamic url, {Map<String, String> headers}) async =>
       json.decode(await _client
@@ -144,14 +147,15 @@ class Wiki {
           .then(_handleError));
 
   /// Searches wiki page titles and contents for the provided search terms [query], and returns up to [limit] (default 50) matching pages.
-  Future<List<SearchResult>> search(String query, [int limit]) async {
+  Future<Iterable<SearchResult>> search(String query, [int limit]) async {
     if (limit < 1 || limit > 100) {
       throw ArgumentError('limit must be between 1 and 100');
     }
 
     return (await requestJson(
-            path: 'search/page',
-            params: {'q': query, 'limit': limit.toString()}))['pages']
+      path: 'search/page',
+      params: {'q': query, 'limit': limit.toString()},
+    ))['pages']
         .map((result) {
       assert(result.containsKey('pages') && result['pages'] is List<Map>,
           'Invalid API response recieved');
@@ -161,7 +165,7 @@ class Wiki {
   }
 
   /// Searches wiki page titles, and returns up to [limit] (default 50) matches between the beginning of a title and the provided search terms [query]. You can use this endpoint for a typeahead search that automatically suggests relevant pages by title.
-  Future<List<SearchResult>> complete(String query, [int limit]) async {
+  Future<Iterable<SearchResult>> complete(String query, [int limit]) async {
     if (limit < 1 || limit > 100) {
       throw ArgumentError('limit must be between 1 and 100');
     }

@@ -36,19 +36,20 @@ class Thumbnail extends FileMetadata {
   @requiredKey
   String mimetype;
 
-  Thumbnail(
-      {int size,
-      int width,
-      int height,
-      double duration,
-      String url,
-      this.mimetype})
-      : super(
-            size: size,
-            width: width,
-            height: height,
-            duration: duration,
-            url: url);
+  Thumbnail({
+    int size,
+    int width,
+    int height,
+    double duration,
+    String url,
+    this.mimetype,
+  }) : super(
+          size: size,
+          width: width,
+          height: height,
+          duration: duration,
+          url: url,
+        );
 
   factory Thumbnail.fromJson(Map<String, dynamic> json) =>
       _$ThumbnailFromJson(json);
@@ -79,13 +80,14 @@ class SearchResult {
   /// Information about the thumbnail image for the page or `null` if no thumbnail exists.
   Thumbnail thumbnail;
 
-  SearchResult(
-      {this.id,
-      this.key,
-      this.title,
-      this.excerpt,
-      this.description,
-      this.thumbnail});
+  SearchResult({
+    this.id,
+    this.key,
+    this.title,
+    this.excerpt,
+    this.description,
+    this.thumbnail,
+  });
 
   factory SearchResult.fromJson(Map<String, dynamic> json) =>
       _$SearchResultFromJson(json);
@@ -154,19 +156,20 @@ class Format extends FileMetadata {
   @requiredKey
   String mediatype;
 
-  Format(
-      {int size,
-      int width,
-      int height,
-      double duration,
-      String url,
-      this.mediatype})
-      : super(
-            size: size,
-            width: width,
-            height: height,
-            duration: duration,
-            url: url);
+  Format({
+    int size,
+    int width,
+    int height,
+    double duration,
+    String url,
+    this.mediatype,
+  }) : super(
+          size: size,
+          width: width,
+          height: height,
+          duration: duration,
+          url: url,
+        );
 
   factory Format.fromJson(Map<String, dynamic> json) => _$FormatFromJson(json);
 }

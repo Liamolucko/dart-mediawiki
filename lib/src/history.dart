@@ -35,31 +35,37 @@ class History extends Stream<Revision> {
   ///
   /// [HistorySegment]s can be stepped through with `newer` and `older`.
   Future<HistorySegment> get latest async => HistorySegment.fromJson(
-      _wiki,
-      await _wiki.requestJson(
+        _wiki,
+        await _wiki.requestJson(
           path: 'page/$_title/history',
           params: {'filter': _filter}
-            ..removeWhere((key, value) => value == null)));
+            ..removeWhere((key, value) => value == null),
+        ),
+      );
 
   /// Returns up to 20 revisions older than revision [id] as a HistorySegment.
   ///
   /// [HistorySegment]s can be stepped through with `newer` and `older`.
   Future<HistorySegment> olderThan(int id) async => HistorySegment.fromJson(
-      _wiki,
-      await _wiki.requestJson(
+        _wiki,
+        await _wiki.requestJson(
           path: 'page/$_title/history',
           params: {'filter': _filter, 'older_than': id.toString()}
-            ..removeWhere((key, value) => value == null)));
+            ..removeWhere((key, value) => value == null),
+        ),
+      );
 
   /// Returns up to 20 revisions newer than revision [id] as a HistorySegment.
   ///
   /// [HistorySegment]s can be stepped through with `newer` and `older`.
   Future<HistorySegment> newerThan(int id) async => HistorySegment.fromJson(
-      _wiki,
-      await _wiki.requestJson(
+        _wiki,
+        await _wiki.requestJson(
           path: 'page/$_title/history',
           params: {'filter': _filter, 'newer_than': id.toString()}
-            ..removeWhere((key, value) => value == null)));
+            ..removeWhere((key, value) => value == null),
+        ),
+      );
 
   Stream<Revision> _createStream([int from, int to]) async* {
     if (from != null) yield await _wiki.revision(from);
@@ -83,8 +89,12 @@ class History extends Stream<Revision> {
       _createStream(from, to).toList();
 
   @override
-  StreamSubscription<Revision> listen(void Function(Revision event) onData,
-          {Function onError, void Function() onDone, bool cancelOnError}) =>
+  StreamSubscription<Revision> listen(
+    void Function(Revision event) onData, {
+    Function onError,
+    void Function() onDone,
+    bool cancelOnError,
+  }) =>
       _createStream().listen(onData,
           onError: onError, onDone: onDone, cancelOnError: cancelOnError);
 }
@@ -115,9 +125,13 @@ class HistorySegment {
   Future<HistorySegment> get latest async =>
       HistorySegment.fromJson(_wiki, await _wiki.getJson(_latestUrl));
 
-  HistorySegment(Wiki wiki, this.revisions,
-      {String newer, String older, String latest})
-      : _wiki = wiki,
+  HistorySegment(
+    Wiki wiki,
+    this.revisions, {
+    String newer,
+    String older,
+    String latest,
+  })  : _wiki = wiki,
         _newerUrl = newer,
         _olderUrl = older,
         _latestUrl = latest;

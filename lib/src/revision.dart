@@ -87,14 +87,15 @@ class Revision {
   @requiredKey
   bool minor;
 
-  Revision(
-      {this.id,
-      this.user,
-      this.timestamp,
-      this.comment,
-      this.size,
-      this.delta,
-      this.minor});
+  Revision({
+    this.id,
+    this.user,
+    this.timestamp,
+    this.comment,
+    this.size,
+    this.delta,
+    this.minor,
+  });
 
   factory Revision.fromJson(Map<String, dynamic> json) =>
       _$RevisionFromJson(json);
@@ -106,22 +107,23 @@ class RevisionWithPage extends Revision {
   @requiredKey
   PageMetadata page;
 
-  RevisionWithPage(
-      {int id,
-      User user,
-      String timestamp,
-      String comment,
-      int size,
-      int delta,
-      bool minor,
-      this.page})
-      : super(
-            id: id,
-            user: user,
-            comment: comment,
-            size: size,
-            delta: delta,
-            minor: minor);
+  RevisionWithPage({
+    int id,
+    User user,
+    String timestamp,
+    String comment,
+    int size,
+    int delta,
+    bool minor,
+    this.page,
+  }) : super(
+          id: id,
+          user: user,
+          comment: comment,
+          size: size,
+          delta: delta,
+          minor: minor,
+        );
 
   factory RevisionWithPage.fromJson(Map<String, dynamic> json) =>
       _$RevisionWithPageFromJson(json);

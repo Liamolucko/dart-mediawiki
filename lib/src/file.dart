@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:json_annotation/json_annotation.dart';
+import 'package:meta/meta.dart';
 
 import '../wiki.dart';
 import 'future_proxy.dart';
@@ -18,7 +19,10 @@ class FileRevision {
   @requiredKey
   User user;
 
-  FileRevision(this.timestamp, this.user);
+  FileRevision({
+    @required this.timestamp,
+    @required this.user,
+  });
 
   factory FileRevision.fromJson(Map<String, dynamic> json) =>
       _$FileRevisionFromJson(json);
@@ -46,12 +50,13 @@ class File {
   @requiredKey
   Format original;
 
-  File(
-      {this.title,
-      this.fileDescriptionUrl,
-      this.latest,
-      this.preferred,
-      this.original});
+  File({
+    @required this.title,
+    @required this.fileDescriptionUrl,
+    @required this.latest,
+    @required this.preferred,
+    @required this.original,
+  });
 
   factory File.fromJson(Map<String, dynamic> json) => _$FileFromJson(json);
 }
@@ -62,14 +67,14 @@ class FileWithThumbnail extends File {
   @requiredKey
   Format thumbnail;
 
-  FileWithThumbnail(
-      {String title,
-      String fileDescriptionUrl,
-      FileRevision latest,
-      Format preferred,
-      Format original,
-      this.thumbnail})
-      : super(
+  FileWithThumbnail({
+    @required String title,
+    @required String fileDescriptionUrl,
+    @required FileRevision latest,
+    @required Format preferred,
+    @required Format original,
+    @required this.thumbnail,
+  }) : super(
           title: title,
           fileDescriptionUrl: fileDescriptionUrl,
           latest: latest,

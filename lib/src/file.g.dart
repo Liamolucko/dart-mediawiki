@@ -10,8 +10,8 @@ FileRevision _$FileRevisionFromJson(Map<String, dynamic> json) {
   return $checkedNew('FileRevision', json, () {
     $checkKeys(json, requiredKeys: const ['timestamp', 'user']);
     final val = FileRevision(
-      $checkedConvert(json, 'timestamp', (v) => v as String),
-      $checkedConvert(json, 'user',
+      timestamp: $checkedConvert(json, 'timestamp', (v) => v as String),
+      user: $checkedConvert(json, 'user',
           (v) => v == null ? null : User.fromJson(v as Map<String, dynamic>)),
     );
     return val;

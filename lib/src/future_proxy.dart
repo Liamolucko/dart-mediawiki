@@ -17,8 +17,10 @@ mixin FutureProxy<T> implements Future<T> {
       future.catchError(onError, test: test);
 
   @override
-  Future<R> then<R>(FutureOr<R> Function(T value) onValue,
-          {Function onError}) =>
+  Future<R> then<R>(
+    FutureOr<R> Function(T value) onValue, {
+    Function onError,
+  }) =>
       future.then(onValue, onError: onError);
 
   @override

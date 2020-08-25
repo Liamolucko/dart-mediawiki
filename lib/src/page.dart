@@ -37,7 +37,7 @@ abstract class PageBase {
   }
 
   /// Pages with the same topic in different languages.
-  Future<List<Language>> get languages async {
+  Future<Iterable<Language>> get languages async {
     if (_wiki.polyfilled) {
       try {
         return ((await _wiki.requestJson(
@@ -53,14 +53,14 @@ abstract class PageBase {
       }
     } else {
       return _wiki.requestJson(path: 'page/$title/links/language').then(
-          (value) => (value as List).map((e) => Language.fromJson(e)).toList());
+          (value) => (value as Iterable).map((e) => Language.fromJson(e)));
     }
   }
 
   /// Information about files used on this page.
-  Future<List<File>> get files async =>
+  Future<Iterable<File>> get files async =>
       await _wiki.requestJson(path: 'page/$title/links/media').then((value) =>
-          (value['files'] as List).map((file) => File.fromJson(file)).toList());
+          (value['files'] as List).map((file) => File.fromJson(file)));
 
   /// The history of this page
   History get history => History(_wiki, title);
@@ -82,9 +82,7 @@ abstract class PageBase {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(_wiki.token != null
-                ? {'Authorization': 'Bearer ${_wiki.token}'}
-                : null)
+            if (_wiki.token != null) 'Authorization': 'Bearer ${_wiki.token}'
           },
           body: json.encode({
             'title': title,
@@ -120,9 +118,7 @@ abstract class PageBase {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            ...(_wiki.token != null
-                ? {'Authorization': 'Bearer ${_wiki.token}'}
-                : null)
+            if (_wiki.token != null) 'Authorization': 'Bearer ${_wiki.token}'
           },
           body: json.encode({
             'title': title,
